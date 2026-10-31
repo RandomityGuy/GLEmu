@@ -935,90 +935,66 @@ fn pushVertex(position: [4]f32) void {
     vertex_count += 1;
 }
 
-pub fn vertex2f(x: f32, y: f32) void {
-    pushVertex(.{ x, y, 0, 1 });
-}
-pub fn vertex3f(x: f32, y: f32, z: f32) void {
-    pushVertex(.{ x, y, z, 1 });
-}
-pub fn vertex4f(x: f32, y: f32, z: f32, w: f32) void {
-    pushVertex(.{ x, y, z, w });
-}
-pub fn vertex2i(x: i32, y: i32) void {
-    pushVertex(.{ @floatFromInt(x), @floatFromInt(y), 0, 1 });
-}
-pub fn vertex3i(x: i32, y: i32, z: i32) void {
-    pushVertex(.{ @floatFromInt(x), @floatFromInt(y), @floatFromInt(z), 1 });
-}
-pub fn vertex4i(x: i32, y: i32, z: i32, w: i32) void {
-    pushVertex(.{ @floatFromInt(x), @floatFromInt(y), @floatFromInt(z), @floatFromInt(w) });
-}
-pub fn vertex2s(x: i16, y: i16) void {
-    pushVertex(.{ @floatFromInt(x), @floatFromInt(y), 0, 1 });
-}
-pub fn vertex3s(x: i16, y: i16, z: i16) void {
-    pushVertex(.{ @floatFromInt(x), @floatFromInt(y), @floatFromInt(z), 1 });
-}
-pub fn vertex4s(x: i16, y: i16, z: i16, w: i16) void {
-    pushVertex(.{ @floatFromInt(x), @floatFromInt(y), @floatFromInt(z), @floatFromInt(w) });
-}
-pub fn vertex2d(x: f64, y: f64) void {
-    pushVertex(.{ @floatCast(x), @floatCast(y), 0, 1 });
-}
-pub fn vertex3d(x: f64, y: f64, z: f64) void {
-    pushVertex(.{ @floatCast(x), @floatCast(y), @floatCast(z), 1 });
-}
-pub fn vertex4d(x: f64, y: f64, z: f64, w: f64) void {
-    pushVertex(.{ @floatCast(x), @floatCast(y), @floatCast(z), @floatCast(w) });
+fn unpack_float_array(v: anytype, comptime T: type, comptime default_value: T) T {
+    const args = @TypeOf(v);
+    const info = @typeInfo(args);
+
+    if (info != .@"struct" or !info.@"struct".is_tuple) {
+        @compileError("Expected an anonymous tuple or struct, e.g., .{r, g, b}");
+    }
+
+    const len = info.@"struct".field_names.len;
+    const target_len = @typeInfo(T).array.len;
+
+    if (len > target_len) {
+        @compileError("Tuple has too many components.");
+    }
+
+    var out: T = default_value;
+    const ElemType = @typeInfo(T).array.child;
+
+    inline for (info.@"struct".field_names, info.@"struct".field_types, 0..) |f_name, F_Type, i| {
+        const val = @field(v, f_name);
+
+        out[i] = switch (@typeInfo(F_Type)) {
+            .float => |f| if (f.bits > 32) @floatCast(val) else @as(ElemType, val),
+            .comptime_float => @floatCast(val),
+            .int => |int| switch (int.signedness) {
+                .signed => @floatFromInt(val),
+                .unsigned => blk: {
+                    const max_val = comptime @as(ElemType, @floatFromInt(std.math.maxInt(F_Type)));
+                    break :blk @as(ElemType, @floatFromInt(val)) / max_val;
+                },
+            },
+            .comptime_int => @floatFromInt(val),
+            else => @compileError("Unsupported coordinate type: " ++ @typeName(F_Type)),
+        };
+    }
+
+    return out;
 }
 
-pub fn color3f(r: f32, g: f32, b: f32) void {
-    g_state.current.color = .{ r, g, b, 1 };
+pub fn vertex(v: anytype) void {
+    const out = unpack_float_array(v, [4]f32, .{ 0.0, 0.0, 0.0, 1.0 });
+    pushVertex(out);
 }
-pub fn color4f(r: f32, g: f32, b: f32, a: f32) void {
-    g_state.current.color = .{ r, g, b, a };
+
+pub fn set_color(v: anytype) void {
+    const out = unpack_float_array(v, [4]f32, .{ 0.0, 0.0, 0.0, 1.0 });
+    g_state.current.color = out;
 }
-pub fn color3ub(r: u8, g: u8, b: u8) void {
-    g_state.current.color = .{ @as(f32, @floatFromInt(r)) / 255.0, @as(f32, @floatFromInt(g)) / 255.0, @as(f32, @floatFromInt(b)) / 255.0, 1 };
-}
-pub fn color4ub(r: u8, g: u8, b: u8, a: u8) void {
-    g_state.current.color = .{ @as(f32, @floatFromInt(r)) / 255.0, @as(f32, @floatFromInt(g)) / 255.0, @as(f32, @floatFromInt(b)) / 255.0, @as(f32, @floatFromInt(a)) / 255.0 };
-}
-pub fn color3i(r: i32, g: i32, b: i32) void {
-    g_state.current.color = .{ @floatFromInt(r), @floatFromInt(g), @floatFromInt(b), 1 };
-}
-pub fn color4i(r: i32, g: i32, b: i32, a: i32) void {
-    g_state.current.color = .{ @floatFromInt(r), @floatFromInt(g), @floatFromInt(b), @floatFromInt(a) };
-}
-pub fn color3us(r: u16, g: u16, b: u16) void {
-    g_state.current.color = .{ @as(f32, @floatFromInt(r)) / 65535.0, @as(f32, @floatFromInt(g)) / 65535.0, @as(f32, @floatFromInt(b)) / 65535.0, 1 };
-}
-pub fn color4us(r: u16, g: u16, b: u16, a: u16) void {
-    g_state.current.color = .{ @as(f32, @floatFromInt(r)) / 65535.0, @as(f32, @floatFromInt(g)) / 65535.0, @as(f32, @floatFromInt(b)) / 65535.0, @as(f32, @floatFromInt(a)) / 65535.0 };
-}
-pub fn indexf(index: f32) void {
+
+pub fn set_index(index: f32) void {
     g_state.current.index = index;
 }
-pub fn indexi(index: i32) void {
-    g_state.current.index = @floatFromInt(index);
-}
-pub fn normal3f(nx: f32, ny: f32, nz: f32) void {
+
+pub fn set_normal(nx: f32, ny: f32, nz: f32) void {
     g_state.current.normal = .{ nx, ny, nz };
 }
-pub fn normal3d(nx: f64, ny: f64, nz: f64) void {
-    g_state.current.normal = .{ @floatCast(nx), @floatCast(ny), @floatCast(nz) };
-}
-pub fn texCoord1f(s: f32) void {
-    g_state.texture_units[g_state.client_arrays.active_texture].current_coord = .{ s, 0, 0, 1 };
-}
-pub fn texCoord2f(s: f32, t: f32) void {
-    g_state.texture_units[g_state.client_arrays.active_texture].current_coord = .{ s, t, 0, 1 };
-}
-pub fn texCoord3f(s: f32, t: f32, r: f32) void {
-    g_state.texture_units[g_state.client_arrays.active_texture].current_coord = .{ s, t, r, 1 };
-}
-pub fn texCoord4f(s: f32, t: f32, r: f32, q: f32) void {
-    g_state.texture_units[g_state.client_arrays.active_texture].current_coord = .{ s, t, r, q };
+
+pub fn set_tex_coord(v: anytype) void {
+    const out = unpack_float_array(v, [4]f32, .{ 0, 0, 0, 1 });
+    g_state.texture_units[g_state.client_arrays.active_texture].current_coord = out;
 }
 
 //  ARB_multitexture
@@ -1030,38 +1006,10 @@ pub fn activeTextureARB(texture: u32) void {
 pub fn clientActiveTextureARB(texture: u32) void {
     g_state.client_arrays.active_texture = textureUnitIndex(texture);
 }
-pub fn multiTexCoord1f(target: u32, s: f32) void {
-    g_state.texture_units[textureUnitIndex(target)].current_coord = .{ s, 0, 0, 1 };
-}
-pub fn multiTexCoord2f(target: u32, s: f32, t: f32) void {
-    g_state.texture_units[textureUnitIndex(target)].current_coord = .{ s, t, 0, 1 };
-}
-pub fn multiTexCoord3f(target: u32, s: f32, t: f32, r: f32) void {
-    g_state.texture_units[textureUnitIndex(target)].current_coord = .{ s, t, r, 1 };
-}
-pub fn multiTexCoord4f(target: u32, s: f32, t: f32, r: f32, q: f32) void {
-    g_state.texture_units[textureUnitIndex(target)].current_coord = .{ s, t, r, q };
-}
-pub fn multiTexCoord1fv(target: u32, v: [*]const f32) void {
-    multiTexCoord1f(target, v[0]);
-}
-pub fn multiTexCoord2fv(target: u32, v: [*]const f32) void {
-    multiTexCoord2f(target, v[0], v[1]);
-}
-pub fn multiTexCoord3fv(target: u32, v: [*]const f32) void {
-    multiTexCoord3f(target, v[0], v[1], v[2]);
-}
-pub fn multiTexCoord4fv(target: u32, v: [*]const f32) void {
-    multiTexCoord4f(target, v[0], v[1], v[2], v[3]);
-}
-pub fn multiTexCoord2i(target: u32, s: i32, t: i32) void {
-    multiTexCoord2f(target, @floatFromInt(s), @floatFromInt(t));
-}
-pub fn multiTexCoord2s(target: u32, s: i16, t: i16) void {
-    multiTexCoord2f(target, @floatFromInt(s), @floatFromInt(t));
-}
-pub fn multiTexCoord2d(target: u32, s: f64, t: f64) void {
-    multiTexCoord2f(target, @floatCast(s), @floatCast(t));
+
+pub fn set_multitex_coord(target: u32, v: anytype) void {
+    const out = unpack_float_array(v, [4]f32, .{ 0, 0, 0, 1 });
+    g_state.texture_units[textureUnitIndex(target)].current_coord = out;
 }
 
 /// Map a `GL_TEXTUREn_ARB` target onto a texture-unit index.
@@ -2752,16 +2700,24 @@ fn storeMatrix(params: [*]f32, matrix: math.Mat4) void {
 
 pub fn getFloatv(pname: u32, params: [*]f32) void {
     switch (pname) {
-        gl.LINE_WIDTH => params[0] = g_state.raster.line_width,
-        gl.POINT_SIZE => params[0] = g_state.raster.point_size,
+        gl.ALPHA_TEST_REF => params[0] = @floatCast(g_state.alpha_test.ref),
+        gl.COLOR_CLEAR_VALUE => storeN(params, &g_state.framebuffer.clear_color),
+        gl.CURRENT_COLOR => storeN(params, &g_state.current.color),
+        gl.CURRENT_NORMAL => storeN(params, &g_state.current.normal),
+        gl.CURRENT_RASTER_COLOR => storeN(params, &g_state.current.color),
+        gl.CURRENT_SECONDARY_COLOR => storeN(params, &g_state.current.secondary_color),
+        gl.CURRENT_TEXTURE_COORDS => storeN(params, &g_state.texture_units[g_state.texture.active_texture].current_coord),
+        gl.CURRENT_RASTER_TEXTURE_COORDS => storeN(params, &g_state.texture_units[g_state.texture.active_texture].current_coord),
+        gl.DEPTH_CLEAR_VALUE => params[0] = @floatCast(g_state.framebuffer.clear_depth),
         gl.DEPTH_RANGE => {
             params[0] = @floatCast(g_state.framebuffer.depth_range[0]);
             params[1] = @floatCast(g_state.framebuffer.depth_range[1]);
         },
-        gl.CURRENT_COLOR => {
-            var i: usize = 0;
-            while (i < 4) : (i += 1) params[i] = g_state.current.color[i];
-        },
+        gl.FOG_COLOR => storeN(params, &g_state.fog.color),
+        gl.FOG_DENSITY => params[0] = g_state.fog.density,
+        gl.FOG_END => params[0] = g_state.fog.end,
+        gl.LINE_WIDTH => params[0] = g_state.raster.line_width,
+        gl.POINT_SIZE => params[0] = g_state.raster.point_size,
         gl.POLYGON_OFFSET_FACTOR => params[0] = g_state.raster.polygon_offset_factor,
         gl.POLYGON_OFFSET_UNITS => params[0] = g_state.raster.polygon_offset_units,
         gl.MODELVIEW_MATRIX => storeMatrix(params, g_state.transform.modelview.current()),
@@ -2777,17 +2733,50 @@ pub fn getFloatv(pname: u32, params: [*]f32) void {
     }
 }
 
-pub fn getBooleanv(pname: u32, params: [*]u8) void {
+pub fn getBoolean(pname: u32) bool {
     switch (pname) {
-        gl.BLEND => params[0] = @intFromBool(g_state.blend.enabled),
-        gl.LIGHTING => params[0] = @intFromBool(g_state.lighting.enabled),
-        gl.FOG => params[0] = @intFromBool(g_state.fog.enabled),
-        gl.TEXTURE_2D => params[0] = @intFromBool(g_state.texture.enabled_2d),
+        gl.BLEND => return (g_state.blend.enabled),
+        gl.FOG => return (g_state.fog.enabled),
+        gl.ALPHA_TEST => return (g_state.alpha_test.enabled),
+        gl.CLIP_PLANE0...gl.CLIP_PLANE5 => return (g_state.clip.enabled[pname - gl.CLIP_PLANE0]),
+        gl.COLOR_ARRAY => return (g_state.client_arrays.color.enabled),
+        gl.COLOR_LOGIC_OP => return (g_state.blend.logic_enabled),
+        gl.COLOR_MATERIAL => return (g_state.lighting.color_material.enabled),
+        gl.CULL_FACE => return (g_state.raster.cull_face_enabled),
+        gl.DEPTH_TEST => return (g_state.depth.enabled),
+        gl.DEPTH_WRITEMASK => return (g_state.depth.mask),
+        gl.DITHER => return (g_state.raster.dither),
+        gl.FOG_COORD_ARRAY => return (g_state.client_arrays.fogcoord.enabled),
+        gl.INDEX_ARRAY => return (g_state.client_arrays.index.enabled),
+        gl.LIGHTING => return (g_state.lighting.enabled),
+        gl.LIGHT0...gl.LIGHT7 => return (g_state.lighting.lights[pname - gl.LIGHT0].enabled),
+        gl.LINE_SMOOTH => return (g_state.raster.line_smooth),
+        gl.LINE_STIPPLE => return (g_state.raster.line_stipple_pattern != 0xFFFF),
+        gl.NORMAL_ARRAY => return (g_state.client_arrays.normal.enabled),
+        gl.POINT_SMOOTH => return (g_state.raster.point_smooth),
+        gl.NORMALIZE => return (g_state.lighting.normalize),
+        gl.POLYGON_OFFSET_FILL => return (g_state.raster.polygon_offset_fill),
+        gl.POLYGON_OFFSET_LINE => return (g_state.raster.polygon_offset_fill),
+        gl.POLYGON_OFFSET_POINT => return (g_state.raster.polygon_offset_fill),
+        gl.POLYGON_SMOOTH => return (g_state.raster.polygon_smooth),
+        gl.RESCALE_NORMAL => return (g_state.lighting.normalize),
+        gl.SCISSOR_TEST => return (g_state.framebuffer.scissor_test),
+        gl.STENCIL_TEST => return (g_state.stencil.enabled),
+        gl.TEXTURE_1D => return (g_state.texture.enabled_1d),
+        gl.TEXTURE_2D => return (g_state.texture.enabled_2d),
+        gl.TEXTURE_COORD_ARRAY => return (g_state.texture_units[g_state.texture.active_texture].coord_array.enabled),
+        gl.TEXTURE_GEN_Q => return (g_state.texture_units[g_state.texture.active_texture].texgen_enabled[3]),
+        gl.TEXTURE_GEN_R => return (g_state.texture_units[g_state.texture.active_texture].texgen_enabled[2]),
+        gl.TEXTURE_GEN_S => return (g_state.texture_units[g_state.texture.active_texture].texgen_enabled[0]),
+        gl.TEXTURE_GEN_T => return (g_state.texture_units[g_state.texture.active_texture].texgen_enabled[1]),
+        gl.VERTEX_ARRAY => return (g_state.client_arrays.vertex.enabled),
         else => {
             if (modern.get_boolean_v) |f| {
-                f(pname, params);
+                var value: [1]u8 = .{0};
+                f(pname, &value);
+                return (value[0] != 0);
             } else {
-                params[0] = 0;
+                return false;
             }
         },
     }
@@ -2799,22 +2788,22 @@ pub fn isTexture(texture: u32) u8 {
 
 // Object queries
 
-fn store4(params: [*]f32, value: [4]f32) void {
+fn storeN(params: [*]f32, value: []const f32) void {
     var i: usize = 0;
-    while (i < 4) : (i += 1) params[i] = value[i];
+    while (i < value.len) : (i += 1) params[i] = value[i];
 }
 
-pub fn getLightfv(light_index: u32, pname: u32, params: [*]f32) void {
-    if (light_index >= 4) {
+pub fn getLight(light_index: u32, pname: u32, params: [*]f32) void {
+    if (light_index >= types.max_lights) {
         params[0] = 0;
         return;
     }
     const source = &g_state.lighting.lights[light_index];
     switch (pname) {
-        gl.AMBIENT => store4(params, source.ambient),
-        gl.DIFFUSE => store4(params, source.diffuse),
-        gl.SPECULAR => store4(params, source.specular),
-        gl.POSITION => store4(params, source.position),
+        gl.AMBIENT => storeN(params, &source.ambient),
+        gl.DIFFUSE => storeN(params, &source.diffuse),
+        gl.SPECULAR => storeN(params, &source.specular),
+        gl.POSITION => storeN(params, &source.position),
         gl.SPOT_DIRECTION => {
             var k: usize = 0;
             while (k < 3) : (k += 1) params[k] = source.spot_direction[k];
@@ -2828,26 +2817,24 @@ pub fn getLightfv(light_index: u32, pname: u32, params: [*]f32) void {
     }
 }
 
-pub fn getMaterialfv(face: u32, pname: u32, params: [*]f32) void {
-    _ = face;
+pub fn getMaterial(pname: u32, params: [*]f32) void {
     switch (pname) {
-        gl.AMBIENT => store4(params, g_state.lighting.material.ambient),
-        gl.DIFFUSE => store4(params, g_state.lighting.material.diffuse),
-        gl.SPECULAR => store4(params, g_state.lighting.material.specular),
-        gl.EMISSION => store4(params, g_state.lighting.material.emissive),
+        gl.AMBIENT => storeN(params, &g_state.lighting.material.ambient),
+        gl.DIFFUSE => storeN(params, &g_state.lighting.material.diffuse),
+        gl.SPECULAR => storeN(params, &g_state.lighting.material.specular),
+        gl.EMISSION => storeN(params, &g_state.lighting.material.emissive),
         gl.SHININESS => params[0] = g_state.lighting.material.shininess,
         else => params[0] = 0,
     }
 }
 
-pub fn getTexEnvfv(target: u32, pname: u32, params: [*]f32) void {
-    _ = target;
+pub fn getTexEnv(pname: u32, params: [*]f32) void {
     const unit = g_state.texture.active_texture;
     switch (pname) {
         gl.TEXTURE_ENV_MODE => {
             params[0] = @floatFromInt(if (g_state.texture_units[unit].combine_enabled) gl.COMBINE_EXT else @backingInt(g_state.texture_units[unit].env_mode));
         },
-        gl.TEXTURE_ENV_COLOR => store4(params, g_state.texture_units[unit].env_color),
+        gl.TEXTURE_ENV_COLOR => storeN(params, &g_state.texture_units[unit].env_color),
         gl.COMBINE_RGB_EXT => params[0] = @floatFromInt(@backingInt(g_state.texture_units[unit].combine_rgb.func)),
         gl.COMBINE_ALPHA_EXT => params[0] = @floatFromInt(@backingInt(g_state.texture_units[unit].combine_alpha.func)),
         gl.SOURCE0_RGB_EXT => params[0] = @floatFromInt(@backingInt(g_state.texture_units[unit].combine_rgb.source[0])),
@@ -2868,7 +2855,7 @@ pub fn getTexEnvfv(target: u32, pname: u32, params: [*]f32) void {
     }
 }
 
-pub fn getTexGenfv(coord: u32, pname: u32, params: [*]f32) void {
+pub fn getTexGen(coord: u32, pname: u32, params: [*]f32) void {
     const unit = g_state.texture.active_texture;
     const target = switch (coord) {
         gl.S => &g_state.texture_units[unit].texgen[0],
@@ -2878,18 +2865,17 @@ pub fn getTexGenfv(coord: u32, pname: u32, params: [*]f32) void {
     };
     switch (pname) {
         gl.TEXTURE_GEN_MODE => params[0] = @floatFromInt(@backingInt(target.mode)),
-        gl.OBJECT_PLANE, gl.EYE_PLANE => store4(params, target.plane),
+        gl.OBJECT_PLANE, gl.EYE_PLANE => storeN(params, &target.plane),
         else => params[0] = 0,
     }
 }
 
-pub fn getClipPlane(plane: u32, equation: [*]f64) void {
+pub fn getClipPlane(plane: u32) ?[4]f32 {
     if (plane < gl.CLIP_PLANE0 or plane > gl.CLIP_PLANE0 + 5) {
-        return;
+        return null;
     }
     const value = g_state.clip.planes[plane - gl.CLIP_PLANE0];
-    var i: usize = 0;
-    while (i < 4) : (i += 1) equation[i] = @floatCast(value[i]);
+    return value;
 }
 
 pub fn getPointer(pname: u32) ?*const anyopaque {

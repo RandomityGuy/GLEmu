@@ -1166,88 +1166,88 @@ pub fn End() callconv(.winapi) void {
     state_mod.endCommand();
 }
 pub fn Vertex2f(x: GLfloat, y: GLfloat) callconv(.winapi) void {
-    state_mod.vertex2f(x, y);
+    state_mod.vertex(.{ x, y });
 }
 pub fn Vertex3f(x: GLfloat, y: GLfloat, z: GLfloat) callconv(.winapi) void {
-    state_mod.vertex3f(x, y, z);
+    state_mod.vertex(.{ x, y, z });
 }
 pub fn Vertex4f(x: GLfloat, y: GLfloat, z: GLfloat, w: GLfloat) callconv(.winapi) void {
-    state_mod.vertex4f(x, y, z, w);
+    state_mod.vertex(.{ x, y, z, w });
 }
 pub fn Vertex2i(x: GLint, y: GLint) callconv(.winapi) void {
-    state_mod.vertex2i(x, y);
+    state_mod.vertex(.{ x, y });
 }
 pub fn Vertex3i(x: GLint, y: GLint, z: GLint) callconv(.winapi) void {
-    state_mod.vertex3i(x, y, z);
+    state_mod.vertex(.{ x, y, z });
 }
 pub fn Vertex4i(x: GLint, y: GLint, z: GLint, w: GLint) callconv(.winapi) void {
-    state_mod.vertex4i(x, y, z, w);
+    state_mod.vertex(.{ x, y, z, w });
 }
 pub fn Vertex2s(x: GLshort, y: GLshort) callconv(.winapi) void {
-    state_mod.vertex2s(x, y);
+    state_mod.vertex(.{ x, y });
 }
 pub fn Vertex3s(x: GLshort, y: GLshort, z: GLshort) callconv(.winapi) void {
-    state_mod.vertex3s(x, y, z);
+    state_mod.vertex(.{ x, y, z });
 }
 pub fn Vertex4s(x: GLshort, y: GLshort, z: GLshort, w: GLshort) callconv(.winapi) void {
-    state_mod.vertex4s(x, y, z, w);
+    state_mod.vertex(.{ x, y, z, w });
 }
 pub fn Vertex2d(x: GLdouble, y: GLdouble) callconv(.winapi) void {
-    state_mod.vertex2d(x, y);
+    state_mod.vertex(.{ x, y });
 }
 pub fn Vertex3d(x: GLdouble, y: GLdouble, z: GLdouble) callconv(.winapi) void {
-    state_mod.vertex3d(x, y, z);
+    state_mod.vertex(.{ x, y, z });
 }
 pub fn Vertex4d(x: GLdouble, y: GLdouble, z: GLdouble, w: GLdouble) callconv(.winapi) void {
-    state_mod.vertex4d(x, y, z, w);
+    state_mod.vertex(.{ x, y, z, w });
 }
 pub fn Color3f(r: GLfloat, g: GLfloat, b: GLfloat) callconv(.winapi) void {
-    state_mod.color3f(r, g, b);
+    state_mod.set_color(.{ r, g, b });
 }
 pub fn Color4f(r: GLfloat, g: GLfloat, b: GLfloat, a: GLfloat) callconv(.winapi) void {
-    state_mod.color4f(r, g, b, a);
+    state_mod.set_color(.{ r, g, b, a });
 }
 pub fn Color3ub(r: GLubyte, g: GLubyte, b: GLubyte) callconv(.winapi) void {
-    state_mod.color3ub(r, g, b);
+    state_mod.set_color(.{ r, g, b });
 }
 pub fn Color4ub(r: GLubyte, g: GLubyte, b: GLubyte, a: GLubyte) callconv(.winapi) void {
-    state_mod.color4ub(r, g, b, a);
+    state_mod.set_color(.{ r, g, b, a });
 }
 pub fn Color3i(r: GLint, g: GLint, b: GLint) callconv(.winapi) void {
-    state_mod.color3i(r, g, b);
+    state_mod.set_color(.{ r, g, b });
 }
 pub fn Color4i(r: GLint, g: GLint, b: GLint, a: GLint) callconv(.winapi) void {
-    state_mod.color4i(r, g, b, a);
+    state_mod.set_color(.{ r, g, b, a });
 }
 pub fn Color3us(r: GLushort, g: GLushort, b: GLushort) callconv(.winapi) void {
-    state_mod.color3us(r, g, b);
+    state_mod.set_color(.{ r, g, b });
 }
 pub fn Color4us(r: GLushort, g: GLushort, b: GLushort, a: GLushort) callconv(.winapi) void {
-    state_mod.color4us(r, g, b, a);
+    state_mod.set_color(.{ r, g, b, a });
 }
 pub fn Indexf(index: GLfloat) callconv(.winapi) void {
-    state_mod.indexf(index);
+    state_mod.set_index(index);
 }
 pub fn Indexi(index: GLint) callconv(.winapi) void {
-    state_mod.indexi(index);
+    state_mod.set_index(@floatFromInt(index));
 }
 pub fn Normal3f(nx: GLfloat, ny: GLfloat, nz: GLfloat) callconv(.winapi) void {
-    state_mod.normal3f(nx, ny, nz);
+    state_mod.set_normal(nx, ny, nz);
 }
 pub fn Normal3d(nx: GLdouble, ny: GLdouble, nz: GLdouble) callconv(.winapi) void {
-    state_mod.normal3d(nx, ny, nz);
+    state_mod.set_normal(@floatCast(nx), @floatCast(ny), @floatCast(nz));
 }
 pub fn TexCoord1f(s: GLfloat) callconv(.winapi) void {
-    state_mod.texCoord1f(s);
+    state_mod.set_tex_coord(.{s});
 }
 pub fn TexCoord2f(s: GLfloat, t: GLfloat) callconv(.winapi) void {
-    state_mod.texCoord2f(s, t);
+    state_mod.set_tex_coord(.{ s, t });
 }
 pub fn TexCoord3f(s: GLfloat, t: GLfloat, r: GLfloat) callconv(.winapi) void {
-    state_mod.texCoord3f(s, t, r);
+    state_mod.set_tex_coord(.{ s, t, r });
 }
 pub fn TexCoord4f(s: GLfloat, t: GLfloat, r: GLfloat, q: GLfloat) callconv(.winapi) void {
-    state_mod.texCoord4f(s, t, r, q);
+    state_mod.set_tex_coord(.{ s, t, r, q });
 }
 pub fn EdgeFlag(flag: GLboolean) callconv(.winapi) void {
     state_mod.edgeFlag(flag);
@@ -1700,8 +1700,9 @@ pub fn Finish() callconv(.winapi) void {
     state_mod.finish();
 }
 
-pub fn GetBooleanv(pname: u32, params: [*]GLboolean) callconv(.winapi) void {
-    state_mod.getBooleanv(pname, params);
+pub fn GetBoolean(pname: u32, params: [*]GLboolean) callconv(.winapi) void {
+    const value = state_mod.getBoolean(pname);
+    params[0] = @intFromBool(value);
 }
 pub fn GetDoublev(pname: u32, params: [*]GLdouble) callconv(.winapi) void {
     var temp: [16]f32 = undefined;
@@ -1725,41 +1726,47 @@ pub fn GetString(name: u32) callconv(.winapi) ?[*:0]const u8 {
     return state_mod.getString(name);
 }
 pub fn GetClipPlane(plane: u32, equation: [*]GLdouble) callconv(.winapi) void {
-    state_mod.getClipPlane(plane, equation);
+    const values = state_mod.getClipPlane(plane);
+    if (values == null) return;
+    inline for (0..4) |i| equation[i] = @floatCast(values.?[i]);
 }
 pub fn GetLightfv(light: u32, pname: u32, params: [*]GLfloat) callconv(.winapi) void {
-    state_mod.getLightfv(lightIndex(light), pname, params);
+    state_mod.getLight(lightIndex(light), pname, params);
 }
 pub fn GetLightiv(light: u32, pname: u32, params: [*]GLint) callconv(.winapi) void {
     var values = [_]GLfloat{ 0, 0, 0, 0 };
-    state_mod.getLightfv(lightIndex(light), pname, &values);
+    state_mod.getLight(lightIndex(light), pname, &values);
     var i: usize = 0;
     while (i < 4) : (i += 1) params[i] = @intFromFloat(values[i]);
 }
 pub fn GetMaterialfv(face: u32, pname: u32, params: [*]GLfloat) callconv(.winapi) void {
-    state_mod.getMaterialfv(face, pname, params);
+    _ = face;
+    state_mod.getMaterial(pname, params);
 }
 pub fn GetMaterialiv(face: u32, pname: u32, params: [*]GLint) callconv(.winapi) void {
+    _ = face;
     var values = [_]GLfloat{ 0, 0, 0, 0 };
-    state_mod.getMaterialfv(face, pname, &values);
+    state_mod.getMaterial(pname, &values);
     var i: usize = 0;
     while (i < 4) : (i += 1) params[i] = @intFromFloat(values[i]);
 }
 pub fn GetTexEnvfv(target: u32, pname: u32, params: [*]GLfloat) callconv(.winapi) void {
-    state_mod.getTexEnvfv(target, pname, params);
+    _ = target;
+    state_mod.getTexEnv(pname, params);
 }
 pub fn GetTexEnviv(target: u32, pname: u32, params: [*]GLint) callconv(.winapi) void {
+    _ = target;
     var values = [_]GLfloat{ 0, 0, 0, 0 };
-    state_mod.getTexEnvfv(target, pname, &values);
+    state_mod.getTexEnv(pname, &values);
     var i: usize = 0;
     while (i < 4) : (i += 1) params[i] = @intFromFloat(values[i]);
 }
 pub fn GetTexGenfv(coord: u32, pname: u32, params: [*]GLfloat) callconv(.winapi) void {
-    state_mod.getTexGenfv(coord, pname, params);
+    state_mod.getTexGen(coord, pname, params);
 }
 pub fn GetTexGeniv(coord: u32, pname: u32, params: [*]GLint) callconv(.winapi) void {
     var values = [_]GLfloat{ 0, 0, 0, 0 };
-    state_mod.getTexGenfv(coord, pname, &values);
+    state_mod.getTexGen(coord, pname, &values);
     var i: usize = 0;
     while (i < 4) : (i += 1) params[i] = @intFromFloat(values[i]);
 }
@@ -1887,37 +1894,37 @@ pub fn ClientActiveTextureARB(texture: u32) callconv(.winapi) void {
     state_mod.clientActiveTextureARB(texture);
 }
 pub fn MultiTexCoord1f(target: u32, s: GLfloat) callconv(.winapi) void {
-    state_mod.multiTexCoord1f(target, s);
+    state_mod.set_multitex_coord(target, .{s});
 }
 pub fn MultiTexCoord2f(target: u32, s: GLfloat, t: GLfloat) callconv(.winapi) void {
-    state_mod.multiTexCoord2f(target, s, t);
+    state_mod.set_multitex_coord(target, .{ s, t });
 }
 pub fn MultiTexCoord3f(target: u32, s: GLfloat, t: GLfloat, r: GLfloat) callconv(.winapi) void {
-    state_mod.multiTexCoord3f(target, s, t, r);
+    state_mod.set_multitex_coord(target, .{ s, t, r });
 }
 pub fn MultiTexCoord4f(target: u32, s: GLfloat, t: GLfloat, r: GLfloat, q: GLfloat) callconv(.winapi) void {
-    state_mod.multiTexCoord4f(target, s, t, r, q);
+    state_mod.set_multitex_coord(target, .{ s, t, r, q });
 }
 pub fn MultiTexCoord1fv(target: u32, v: [*]const GLfloat) callconv(.winapi) void {
-    state_mod.multiTexCoord1fv(target, v);
+    state_mod.set_multitex_coord(target, .{v[0]});
 }
 pub fn MultiTexCoord2fv(target: u32, v: [*]const GLfloat) callconv(.winapi) void {
-    state_mod.multiTexCoord2fv(target, v);
+    state_mod.set_multitex_coord(target, .{ v[0], v[1] });
 }
 pub fn MultiTexCoord3fv(target: u32, v: [*]const GLfloat) callconv(.winapi) void {
-    state_mod.multiTexCoord3fv(target, v);
+    state_mod.set_multitex_coord(target, .{ v[0], v[1], v[2] });
 }
 pub fn MultiTexCoord4fv(target: u32, v: [*]const GLfloat) callconv(.winapi) void {
-    state_mod.multiTexCoord4fv(target, v);
+    state_mod.set_multitex_coord(target, .{ v[0], v[1], v[2], v[3] });
 }
 pub fn MultiTexCoord2i(target: u32, s: GLint, t: GLint) callconv(.winapi) void {
-    state_mod.multiTexCoord2i(target, s, t);
+    state_mod.set_multitex_coord(target, .{ s, t });
 }
 pub fn MultiTexCoord2s(target: u32, s: i16, t: i16) callconv(.winapi) void {
-    state_mod.multiTexCoord2s(target, s, t);
+    state_mod.set_multitex_coord(target, .{ s, t });
 }
 pub fn MultiTexCoord2d(target: u32, s: f64, t: f64) callconv(.winapi) void {
-    state_mod.multiTexCoord2d(target, s, t);
+    state_mod.set_multitex_coord(target, .{ s, t });
 }
 
 // EXT_fog_coord
@@ -1994,7 +2001,8 @@ pub fn EdgeFlagPointerEXT(stride: GLsizei, count: GLsizei, pointer: ?*const anyo
     state_mod.edgeFlagPointer(stride, pointer);
 }
 pub fn GetPointervEXT(pname: u32, params: [*]?*anyopaque) callconv(.winapi) void {
-    state_mod.getPointerv(pname, params);
+    const pointer = state_mod.getPointer(pname);
+    if (pointer) |p| params[0] = @constCast(p);
 }
 pub fn ArrayElementEXT(index: GLint) callconv(.winapi) void {
     state_mod.arrayElement(index);
